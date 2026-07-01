@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12130f">
+<title>RACK — reproductor modular</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Barra superior -->
+  <header id="topbar">
+    <div class="brand">
+      <span class="brand-mark">◈</span>
+      <span class="brand-text">RACK</span>
+    </div>
+    <div class="topbar-actions">
+      <button id="btnAddFiles" class="btn-icon" title="Añadir canciones">＋ Añadir</button>
+      <button id="btnEditMode" class="btn-icon" title="Reordenar módulos">⇕ Reordenar</button>
+      <button id="btnSettings" class="btn-icon" title="Personalizar">⚙ Personalizar</button>
+    </div>
+  </header>
+
+  <input type="file" id="fileInput" accept="audio/*" multiple hidden>
+
+  <!-- Grid de paneles reordenables -->
+  <main id="rack" class="rack-grid">
+
+    <section class="panel" data-widget="nowplaying" draggable="false">
+      <div class="panel-head">
+        <span class="led"></span>
+        <span class="panel-title">Reproduciendo</span>
+        <span class="drag-handle" title="Arrastrar">⠿</span>
+      </div>
+      <div class="panel-body nowplaying-body">
+        <div id="albumArt" class="album-art">
+          <span id="albumArtGlyph">♪</span>
+        </div>
+        <div class="track-meta">
+          <div id="trackTitle" class="track-title">Sin canción cargada</div>
+          <div id="trackArtist" class="track-artist">Añade archivos de audio para empezar</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" data-widget="controls" draggable="false">
+      <div class="panel-head">
+        <span class="led"></span>
+        <span class="panel-title">Controles</span>
+        <span class="drag-handle" title="Arrastrar">⠿</span>
+      </div>
+      <div class="panel-body controls-body">
+        <div class="seek-row">
+          <span id="timeCurrent" class="time-label">0:00</span>
+          <input type="range" id="seekBar" min="0" max="100" value="0" step="0.1" class="slider seek-slider">
+          <span id="timeTotal" class="time-label">0:00</span>
+        </div>
+        <div class="transport-row">
+          <button id="btnShuffle" class="btn-transport" title="Aleatorio">⤨</button>
+          <button id="btnPrev" class="btn-transport" title="Anterior">⏮</button>
+          <button id="btnPlay" class="btn-transport btn-play" title="Reproducir">▶</button>
+          <button id="btnNext" class="btn-transport" title="Siguiente">⏭</button>
+          <button id="btnRepeat" class="btn-transport" title="Repetir">⟳</button>
+        </div>
+        <div class="volume-row">
+          <span class="vol-icon">♪</span>
+          <input type="range" id="volumeBar" min="0" max="100" value="80" class="slider">
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" data-widget="visualizer" draggable="false">
+      <div class="panel-head">
+        <span class="led"></span>
+        <span class="panel-title">Medidor</span>
+        <span class="drag-handle" title="Arrastrar">⠿</span>
+      </div>
+      <div class="panel-body">
+        <canvas id="visualizerCanvas" class="visualizer-canvas"></canvas>
+      </div>
+    </section>
+
+    <section class="panel" data-widget="equalizer" draggable="false">
+      <div class="panel-head">
+        <span class="led"></span>
+        <span class="panel-title">Ecualizador</span>
+        <span class="drag-handle" title="Arrastrar">⠿</span>
+      </div>
+      <div class="panel-body">
+        <div id="eqBands" class="eq-bands"></div>
+        <button id="btnEqReset" class="btn-small">Restablecer EQ</button>
+      </div>
+    </section>
+
+    <section class="panel" data-widget="playlist" draggable="false">
+      <div class="panel-head">
+        <span class="led"></span>
+        <span class="panel-title">Lista</span>
+        <span class="drag-handle" title="Arrastrar">⠿</span>
+      </div>
+      <div class="panel-body">
+        <ul id="playlistEl" class="playlist-list">
+          <li class="playlist-empty">Tu lista está vacía. Toca "＋ Añadir".</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="panel" data-widget="lyrics" draggable="false">
+      <div class="panel-head">
+        <span class="led"></span>
+        <span class="panel-title">Letra</span>
+        <span class="drag-handle" title="Arrastrar">⠿</span>
+      </div>
+      <div class="panel-body">
+        <div id="lyricsView" class="lyrics-view" hidden></div>
+        <textarea id="lyricsInput" class="lyrics-input" placeholder="Pega aquí la letra. Si usas formato .lrc con marcas de tiempo [mm:ss.xx], se sincronizará con la canción."></textarea>
+        <button id="btnLyricsToggle" class="btn-small">Ver letra</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Panel de personalización -->
+<div id="settingsOverlay" class="overlay" hidden>
+  <div id="settingsPanel" class="settings-panel">
+    <div class="settings-head">
+      <span>Personalizar</span>
+      <button id="btnCloseSettings" class="btn-icon">✕</button>
+    </div>
+    <div class="settings-body">
+
+      <div class="settings-group">
+        <h3>Color</h3>
+        <label class="settings-row">Acento <input type="color" id="colorAccent" value="#e8a33d"></label>
+        <label class="settings-row">Acento secundario <input type="color" id="colorAccent2" value="#4fb8c4"></label>
+        <label class="settings-row">Fondo <input type="color" id="colorBg" value="#12130f"></label>
+        <label class="settings-row">Paneles <input type="color" id="colorPanel" value="#1c1d17"></label>
+        <label class="settings-row">Texto <input type="color" id="colorText" value="#f2ede2"></label>
+      </div>
+
+      <div class="settings-group">
+        <h3>Tipografía</h3>
+        <label class="settings-row">Titulares
+          <select id="fontDisplay">
+            <option value="'Space Grotesk', sans-serif">Space Grotesk</option>
+            <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+            <option value="'Georgia', serif">Georgia</option>
+            <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
+            <option value="'Courier New', monospace">Courier New</option>
+          </select>
+        </label>
+        <label class="settings-row">Cuerpo
+          <select id="fontBody">
+            <option value="'Inter', sans-serif">Inter</option>
+            <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+            <option value="'Georgia', serif">Georgia</option>
+            <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="settings-group">
+        <h3>Forma y estilo</h3>
+        <label class="settings-row">Redondeo
+          <input type="range" id="radiusRange" min="0" max="28" value="10">
+        </label>
+        <label class="settings-row">Efecto cristal
+          <input type="checkbox" id="glassToggle">
+        </label>
+        <label class="settings-row">Columnas del rack
+          <input type="range" id="colsRange" min="1" max="3" value="2">
+        </label>
+      </div>
+
+      <div class="settings-group">
+        <h3>Fondo</h3>
+        <label class="settings-row">Imagen
+          <input type="file" id="bgImageInput" accept="image/*">
+        </label>
+        <label class="settings-row">Atenuar imagen
+          <input type="range" id="bgDim" min="0" max="90" value="55">
+        </label>
+        <button id="btnClearBg" class="btn-small">Quitar imagen</button>
+      </div>
+
+      <div class="settings-group">
+        <h3>Módulos visibles</h3>
+        <div id="widgetToggles" class="widget-toggles"></div>
+      </div>
+
+      <div class="settings-group">
+        <h3>Ajustes</h3>
+        <button id="btnResetAll" class="btn-small">Restablecer todo</button>
+        <button id="btnExport" class="btn-small">Exportar tema (.json)</button>
+        <label class="btn-small import-label">Importar tema
+          <input type="file" id="btnImport" accept="application/json" hidden>
+        </label>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

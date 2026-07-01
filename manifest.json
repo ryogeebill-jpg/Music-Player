@@ -1,0 +1,14 @@
+{
+  "name": "RACK — Reproductor modular",
+  "short_name": "RACK",
+  "description": "Reproductor de música totalmente personalizable con módulos reordenables, ecualizador y temas.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#12130f",
+  "theme_color": "#12130f",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
